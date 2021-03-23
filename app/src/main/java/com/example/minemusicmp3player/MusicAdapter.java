@@ -45,7 +45,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder customViewHolder, int position) {
 
-        Bitmap albumImg = getAlbumImg(context, Integer.parseInt(musicList.get(position).getAlbumArt()), 200);
+        Bitmap albumImg = getAlbumImg(context, Long.parseLong(musicList.get(position).getAlbumArt()), 200);
         if(albumImg != null){
             customViewHolder.albumArt.setImageBitmap(albumImg);
         }
@@ -64,7 +64,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
     }
 
 
-    public Bitmap getAlbumImg(Context context, int albumArt, int imgMaxSize){
+    public Bitmap getAlbumImg(Context context, Long albumArt, int imgMaxSize){
 
         BitmapFactory.Options options = new BitmapFactory.Options();
 

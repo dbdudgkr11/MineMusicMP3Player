@@ -243,7 +243,7 @@ public class Player extends Fragment implements View.OnClickListener {
         }
 
         // 앨범 이미지 세팅
-        Bitmap albumImg = musicAdapter.getAlbumImg(mainActivity, Integer.parseInt(musicData.getAlbumArt()), 200);
+        Bitmap albumImg = musicAdapter.getAlbumImg(mainActivity, Long.parseLong(musicData.getAlbumArt()), 200);
         if(albumImg != null){
             ivAlbum.setImageBitmap(albumImg);
         }else{
