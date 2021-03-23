@@ -15,7 +15,8 @@ public class MusicData {
     private int playCount;
     private int liked;
 
-    public MusicData(){};
+    public MusicData() {
+    }
 
     public MusicData(String id, String artist, String title, String albumArt, String duration, int playCount, int liked) {
         this.id = id;
@@ -83,18 +84,16 @@ public class MusicData {
         this.liked = liked;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MusicData musucData = (MusicData) o;
-        return Objects.equals(id, musucData.id);
-    }
+    public boolean equals(Object obj) {
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+        boolean equal = false;
+
+        if (obj instanceof MusicData) {
+            MusicData data = (MusicData) obj;
+            equal = (this.id).equals(data.getId());
+        }
+
+        return equal;
     }
 }
