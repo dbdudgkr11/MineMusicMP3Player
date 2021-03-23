@@ -9,6 +9,7 @@ import android.os.ParcelFileDescriptor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,21 +24,19 @@ import java.util.ArrayList;
 public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHolder> {
     private Context context;
     private ArrayList<MusicData> musicList;
-    //생성자
+
+
+    private OnItemClickListener mListener = null;
+
     public MusicAdapter(Context context) {
         this.context = context;
     }
 
-    //setter
-    public void setMusicList(ArrayList<MusicData> musicList) {
-        this.musicList = musicList;
-    }
-
-    //리사이클러 뷰에 들어갈 항목 뷰를 inflater  한다.
     @NonNull
     @Override
     public CustomViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recycler_item,viewGroup,false);
+
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recycler_item, viewGroup, false);
         CustomViewHolder viewHolder = new CustomViewHolder(view);
 
         return viewHolder;
@@ -45,20 +44,28 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
 
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder customViewHolder, int position) {
-        //앨범 이미지를 비트맵으로 만들기
-        Bitmap albumImg = getAlbumImg(context, Long.parseLong(musicList.get(position).getAlbumArt()), 200);
+
+        Bitmap albumImg = getAlbumImg(context, Integer.parseInt(musicList.get(position).getAlbumArt()), 200);
         if(albumImg != null){
             customViewHolder.albumArt.setImageBitmap(albumImg);
         }
 
-        // recyclerviewer에 보여줘야할 정보 세팅
+
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss");
         customViewHolder.title.setText(musicList.get(position).getTitle());
         customViewHolder.artist.setText(musicList.get(position).getArtist());
         customViewHolder.duration.setText(simpleDateFormat.format(Integer.parseInt(musicList.get(position).getDuration())));
+
     }
-    //앨범사진 아이디와 앨범사이즈를 부여한다.
-    public Bitmap getAlbumImg(Context context, long albumArt, int imgMaxSize) {
+
+    @Override
+    public int getItemCount() {
+        return musicList != null ? musicList.size() : 0;
+    }
+
+
+    public Bitmap getAlbumImg(Context context, int albumArt, int imgMaxSize){
+
         BitmapFactory.Options options = new BitmapFactory.Options();
 
         /*컨텐트 프로바이더(Content Provider)는 앱 간의 데이터 공유를 위해 사용됨.
@@ -71,22 +78,26 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
 
         ContentResolver contentResolver = context.getContentResolver();
 
-        // 앨범아트는 uri를 제공하지 않으므로, 별도로 생성.
+
         Uri uri = Uri.parse("content://media/external/audio/albumart/" + albumArt);
         if (uri != null){
             ParcelFileDescriptor fd = null;
             try{
                 fd = contentResolver.openFileDescriptor(uri, "r");
 
-                //true면 비트맵객체에 메모리를 할당하지 않아서 비트맵을 반환하지 않음.
-                //다만 options fields는 값이 채워지기 때문에 Load 하려는 이미지의 크기를 포함한 정보들을 얻어올 수 있다.
+                options.inJustDecodeBounds = true;
 
-                options.inJustDecodeBounds = false; // false 비트맵을 만들고 해당 이미지의 가로, 세로, 중심으로 가져옴
+                int scale = 0;
+                if(options.outHeight > imgMaxSize || options.outWidth > imgMaxSize){
+                    scale = (int)Math.pow(2,(int) Math.round(Math.log(imgMaxSize / (double) Math.max(options.outHeight, options.outWidth)) / Math.log(0.5)));
+                }
+                options.inJustDecodeBounds = false;
+                options.inSampleSize = scale;
 
                 Bitmap bitmap = BitmapFactory.decodeFileDescriptor(fd.getFileDescriptor(), null, options);
 
                 if(bitmap != null){
-                    // 정확하게 사이즈를 맞춤
+
                     if(options.outWidth != imgMaxSize || options.outHeight != imgMaxSize){
                         Bitmap tmp = Bitmap.createScaledBitmap(bitmap, imgMaxSize, imgMaxSize, true);
                         bitmap.recycle();
@@ -108,13 +119,18 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
         return null;
     }
 
-    @Override
-    public int getItemCount() {
-        return (musicList != null) ? musicList.size() : 0;
+    public interface OnItemClickListener
+    {
+        void onItemClick(View v, int pos);
+    }
+
+
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        this.mListener = listener;
     }
 
     public class CustomViewHolder extends RecyclerView.ViewHolder {
-        //inflagter된 데이터 항목을 찾아온다.
         ImageView albumArt;
         TextView title;
         TextView artist;
@@ -122,11 +138,27 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.CustomViewHo
 
         public CustomViewHolder(@NonNull View itemView) {
             super(itemView);
-            //위치 찾기
+
             this.albumArt = itemView.findViewById(R.id.d_ivAlbum);
             this.title = itemView.findViewById(R.id.d_tvTitle);
             this.artist = itemView.findViewById(R.id.d_tvArtist);
             this.duration = itemView.findViewById(R.id.d_tvDuration);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    int pos = getAdapterPosition();
+                    if( pos != RecyclerView.NO_POSITION){
+
+                        mListener.onItemClick(view,pos);
+                    }
+                }
+            });
         }
+
+    }
+
+    public void setMusicList(ArrayList<MusicData> musicList) {
+        this.musicList = musicList;
     }
 }
